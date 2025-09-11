@@ -62,27 +62,26 @@
       top: 6px;
     }
 
-    /* Елегантний header */
+    /* Елегантний header з картинкою */
     header{
       text-align: center;
-      padding: 4rem 1rem 2rem;
+      padding: 0;
       border-bottom: 1px solid var(--border-subtle);
-      background: linear-gradient(180deg, rgba(20,20,20,0.3) 0%, transparent 100%);
+      background: 
+        url('https://i.ibb.co/kV9Skfd2/IMG-20250911-151703-461.png') center center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: scroll;
+      height: 200px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
     }
 
-    header .logo {
-      max-width: 400px;
-      height: auto;
-      margin: 0 auto;
-      display: block;
-      filter: drop-shadow(0 0 20px rgba(169, 27, 27, 0.3));
-      transition: all 0.3s ease;
-    }
-
-    header .logo:hover {
-      filter: drop-shadow(0 0 30px rgba(169, 27, 27, 0.5));
-      transform: scale(1.02);
-    }
+    /* Видаляємо псевдоелементи header */
 
     .wrap{
       max-width: 1200px;
@@ -449,13 +448,8 @@
     /* Покращений адаптив */
     @media (max-width: 768px){
       header{
-        padding: 3rem 1rem 1.5rem;
+        height: 150px;
       }
-      
-      header .logo {
-        max-width: 280px;
-      }
-      
       .wrap{
         margin: 2rem auto;
         padding: 0 1rem;
@@ -479,10 +473,9 @@
     }
 
     @media (max-width: 480px){
-      header .logo {
-        max-width: 220px;
+      header{
+        height: 120px;
       }
-      
       #searchInput{
         padding: 0.9rem 1.2rem 0.9rem 3.5rem;
         font-size: 1rem;
@@ -559,7 +552,7 @@
   <a href="#main-content" class="skip-link">Перейти до основного вмісту</a>
   
   <header>
-    <img src="https://i.ibb.co/kV9Skfd2/IMG-20250911-151703-461.png" alt="Obsessed Vampires" class="logo">
+    <!-- Текст прибрано -->
   </header>
 
   <main class="wrap" id="main-content">
@@ -595,11 +588,13 @@
   <script>
     // --- Google Sheets API ---
     const SHEET_ID = '16FR9S-8fO4VaiHiY6yEWWmnhB9_NjB48HSYJD58vKrs';
-    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Sheet1`;
 
     async function loadDataFromSheets() {
       try {
         console.log('Робимо запит до Google Sheets...');
+        
+        // Спробуємо CSV формат
         const response = await fetch(SHEET_URL);
         console.log('Відповідь отримано:', response.status);
         
@@ -607,28 +602,52 @@
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const text = await response.text();
-        console.log('Текст відповіді (перші 200 символів):', text.substring(0, 200));
+        const csvText = await response.text();
+        console.log('CSV відповідь отримана:', csvText.substring(0, 200));
         
-        // Видаляємо обгортку Google Sheets
-        const jsonString = text.substring(47).slice(0, -2);
-        const data = JSON.parse(jsonString);
-        console.log('Парсинг даних успішний');
+        // Парсимо CSV
+        const lines = csvText.split('\n').filter(line => line.trim());
+        const headers = lines[0].split(',');
         
-        const processedData = data.table.rows.slice(1) // пропускаємо заголовки
-          .filter(row => row.c && row.c[0] && row.c[0].v) // фільтруємо порожні рядки
-          .map(row => ({
-            title: row.c[0]?.v || '',
-            keywords: row.c[1]?.v || '',
-            link: row.c[2]?.v || '#',
-            tags: row.c[3]?.v || ''
-          }));
+        const processedData = lines.slice(1)
+          .filter(line => line.trim())
+          .map(line => {
+            const values = line.split(',');
+            return {
+              title: values[0]?.replace(/"/g, '') || '',
+              keywords: values[1]?.replace(/"/g, '') || '',
+              link: values[2]?.replace(/"/g, '') || '#',
+              tags: values[3]?.replace(/"/g, '') || ''
+            };
+          })
+          .filter(item => item.title); // Фільтруємо порожні
           
         console.log('Оброблені дані:', processedData);
         return processedData;
       } catch (error) {
         console.error('Помилка завантаження з Google Sheets:', error);
-        return [];
+        
+        // Fallback - тестові дані
+        return [
+          {
+            title: 'Vampire Girl',
+            keywords: 'gothic, dark, anime',
+            link: '#',
+            tags: 'анімовані/аватарки'
+          },
+          {
+            title: 'Dark Rose',
+            keywords: 'rose, gothic, red',
+            link: '#',
+            tags: 'статичні/емоджі'
+          },
+          {
+            title: 'Blood Moon',
+            keywords: 'moon, blood, night',
+            link: '#',
+            tags: 'анімовані/статичні'
+          }
+        ];
       }
     }
 
@@ -812,4 +831,4 @@
     })();
   </script>
 </body>
-  </html>
+</html>
