@@ -65,35 +65,23 @@
     /* Елегантний header */
     header{
       text-align: center;
-      padding: 0;
+      padding: 4rem 1rem 2rem;
       border-bottom: 1px solid var(--border-subtle);
-      background-image: url('https://i.ibb.co/kV9Skfd2/IMG-20250911-151703-461.png');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      min-height: 300px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
+      background: linear-gradient(180deg, rgba(20,20,20,0.3) 0%, transparent 100%);
     }
 
-    /* Темний overlay для кращої читабельності */
-    header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.6) 100%);
-      z-index: 1;
-    }
-
-    /* Приховуємо img тег, оскільки тепер використовуємо background */
     header .logo {
-      display: none;
+      max-width: 400px;
+      height: auto;
+      margin: 0 auto;
+      display: block;
+      filter: drop-shadow(0 0 20px rgba(169, 27, 27, 0.3));
+      transition: all 0.3s ease;
+    }
+
+    header .logo:hover {
+      filter: drop-shadow(0 0 30px rgba(169, 27, 27, 0.5));
+      transform: scale(1.02);
     }
 
     .wrap{
@@ -461,7 +449,11 @@
     /* Покращений адаптив */
     @media (max-width: 768px){
       header{
-        min-height: 200px;
+        padding: 3rem 1rem 1.5rem;
+      }
+      
+      header .logo {
+        max-width: 280px;
       }
       
       .wrap{
@@ -487,8 +479,8 @@
     }
 
     @media (max-width: 480px){
-      header{
-        min-height: 150px;
+      header .logo {
+        max-width: 220px;
       }
       
       #searchInput{
@@ -741,7 +733,7 @@
 
       const debouncedFilter = debounce(filterCards, 250);
 
-      searcInput.addEventListener('input', ()=> {
+      searchInput.addEventListener('input', ()=> {
         updateClearButton();
         debouncedFilter();
       });
