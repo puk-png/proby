@@ -742,9 +742,6 @@
       
       // Перевіряємо чи посилання дійсне
       const isValidLink = item.link && item.link !== '#' && item.link.trim() !== '';
-      const linkAttributes = isValidLink 
-        ? `href="${item.link}" target="_blank" rel="noopener" onclick="handleLinkClick(event, '${item.link}')"`
-        : 'href="#" onclick="handleInvalidLink(event)"';
       
       console.log('Створюємо картку:', item.title, 'з посиланням:', item.link, 'дійсне:', isValidLink, 'з тегами:', tagsArray);
       
@@ -754,42 +751,66 @@
           <div class="tags">
             ${tagsHTML}
           </div>
-          <a class="btn" ${linkAttributes}>Відкрити</a>
+          <a class="btn" href="${item.link}" data-link="${item.link}" target="_blank" rel="noopener">Відкрити</a>
         </article>
       `;
     }
 
-    // Функція для обробки кліків на посилання
-    window.handleLinkClick = function(event, url) {
-      console.log('Клік по посиланню:', url);
+    // Функція для додавання обробників кліків до всіх кнопок
+    function addClickHandlers() {
+      const buttons = document.querySelectorAll('.card .btn');
+      console.log('Додаємо обробники до', buttons.length, 'кнопок');
       
-      // Спробуємо відкрити в новому вікні
-      try {
-        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-        if (!newWindow) {
-          console.log('Браузер заблокував popup, спробуємо через location');
-          // Якщо popup заблокований, спробуємо через location
-          window.location.href = url;
-        } else {
-          console.log('Посилання успішно відкрито в новому вікні');
-        }
-      } catch (error) {
-        console.error('Помилка відкриття посилання:', error);
-        // Запасний варіант
-        window.location.href = url;
-      }
-      
-      event.preventDefault();
-      return false;
-    };
-
-    // Функція для недійсних посилань
-    window.handleInvalidLink = function(event) {
-      console.log('Клік по недійсному посиланню');
-      alert('Посилання недоступне або некоректне');
-      event.preventDefault();
-      return false;
-    };
+      buttons.forEach((button, index) => {
+        const link = button.getAttribute('data-link') || button.getAttribute('href');
+        console.log(`Кнопка ${index + 1}: посилання =`, link);
+        
+        // Видаляємо старі обробники якщо є
+        button.replaceWith(button.cloneNode(true));
+        const newButton = document.querySelectorAll('.card .btn')[index];
+        
+        newButton.addEventListener('click', function(event) {
+          event.preventDefault();
+          console.log('=== КЛІК ПО КНОПЦІ ===');
+          console.log('Посилання:', link);
+          console.log('Кнопка:', newButton);
+          
+          if (!link || link === '#' || link.trim() === '') {
+            console.log('Недійсне посилання!');
+            alert('Посилання недоступне або некоректне');
+            return false;
+          }
+          
+          try {
+            console.log('Намагаємося відкрити:', link);
+            
+            // Спробуємо різні способи відкриття
+            const newWindow = window.open(link, '_blank', 'noopener,noreferrer');
+            
+            if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+              console.log('window.open не спрацювало, пробуємо location.href');
+              window.location.href = link;
+            } else {
+              console.log('Посилання успішно відкрито через window.open');
+            }
+            
+          } catch (error) {
+            console.error('Помилка при відкритті посилання:', error);
+            try {
+              console.log('Пробуємо запасний варіант через location.href');
+              window.location.href = link;
+            } catch (fallbackError) {
+              console.error('Запасний варіант також не спрацював:', fallbackError);
+              alert('Не вдалося відкрити посилання: ' + link);
+            }
+          }
+          
+          return false;
+        });
+        
+        console.log(`Обробник додано для кнопки ${index + 1}`);
+      });
+    }
 
     // --- Логіка пошуку та фільтрів ---
     (function(){
@@ -870,6 +891,9 @@
           if(existingEmpty) existingEmpty.remove();
         }
         
+        // Переконуємося, що обробники кліків додані після фільтрації
+        addClickHandlers();
+        
         hideSearching();
       }
 
@@ -943,6 +967,10 @@
           cardsContainer.innerHTML = cardsHTML;
           allCards = Array.from(cardsContainer.querySelectorAll('.card'));
           console.log('Створено карток:', allCards.length);
+          
+          // Додаємо обробники кліків після створення карток
+          addClickHandlers();
+          
           filterCards();
         } catch (error) {
           console.error('Помилка ініціалізації:', error);
