@@ -62,26 +62,38 @@
       top: 6px;
     }
 
-    /* Елегантний header з картинкою */
+    /* Елегантний header */
     header{
       text-align: center;
-      padding: 0;
+      padding: 3rem 1rem 2rem;
       border-bottom: 1px solid var(--border-subtle);
-      background: 
-        url('https://i.ibb.co/kV9Skfd2/IMG-20250911-151703-461.png') center center;
-      background-size: cover;
-      background-repeat: no-repeat;
-      background-attachment: scroll;
-      height: 200px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      overflow: hidden;
+      background: linear-gradient(180deg, rgba(20,20,20,0.3) 0%, transparent 100%);
     }
 
-    /* Видаляємо псевдоелементи header */
+    .header-logo {
+      max-width: 100%;
+      width: auto;
+      height: auto;
+      max-height: 200px;
+      display: block;
+      margin: 0 auto;
+      filter: drop-shadow(0 0 30px rgba(169, 27, 27, 0.3)) drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8));
+      transition: all 0.3s ease;
+    }
+
+    .header-logo:hover {
+      filter: drop-shadow(0 0 40px rgba(169, 27, 27, 0.5)) drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.9));
+      transform: scale(1.02);
+    }
+
+    header p{
+      margin-top: 1.5rem;
+      color: var(--muted);
+      font-style: bold;
+      font-size: 1.1rem;
+      font-weight: 300;
+      letter-spacing: 1px;
+    }
 
     .wrap{
       max-width: 1200px;
@@ -448,8 +460,13 @@
     /* Покращений адаптив */
     @media (max-width: 768px){
       header{
-        height: 150px;
+        padding: 2rem 1rem 1.5rem;
       }
+      
+      .header-logo {
+        max-height: 150px;
+      }
+      
       .wrap{
         margin: 2rem auto;
         padding: 0 1rem;
@@ -474,11 +491,31 @@
 
     @media (max-width: 480px){
       header{
-        height: 120px;
+        padding: 1.5rem 0.5rem 1rem;
       }
+      
+      .header-logo {
+        max-height: 120px;
+      }
+      
+      header p {
+        font-size: 1rem;
+        margin-top: 1rem;
+      }
+      
       #searchInput{
         padding: 0.9rem 1.2rem 0.9rem 3.5rem;
         font-size: 1rem;
+      }
+    }
+
+    @media (max-width: 360px){
+      .header-logo {
+        max-height: 100px;
+      }
+      
+      header p {
+        font-size: 0.9rem;
       }
     }
 
@@ -498,6 +535,10 @@
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+      }
+      
+      .header-logo:hover {
+        transform: none;
       }
     }
 
@@ -552,7 +593,8 @@
   <a href="#main-content" class="skip-link">Перейти до основного вмісту</a>
   
   <header>
-    <!-- Текст прибрано -->
+    <img src="https://i.ibb.co/kV9Skfd2/IMG-20250911-151703-461.png" alt="Obsessed Vampires" class="header-logo" />
+    <p>✦ Eternal Darkness Collection ✦</p>
   </header>
 
   <main class="wrap" id="main-content">
@@ -588,13 +630,72 @@
   <script>
     // --- Google Sheets API ---
     const SHEET_ID = '16FR9S-8fO4VaiHiY6yEWWmnhB9_NjB48HSYJD58vKrs';
-    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Sheet1`;
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+
+    // Функція для обробки різних типів посилань
+    function processLink(link) {
+      if (!link || link === '#' || link.trim() === '') {
+        console.log('Порожнє посилання, повертаємо #');
+        return '#';
+      }
+
+      const cleanLink = link.trim();
+      console.log('Обробляємо посилання:', cleanLink);
+      
+      // Якщо це вже готове HTTP/HTTPS посилання - повертаємо як є
+      if (cleanLink.startsWith('http://') || cleanLink.startsWith('https://')) {
+        console.log('Готове HTTP посилання:', cleanLink);
+        return cleanLink;
+      }
+      
+      // Якщо це Telegram посилання без протоколу
+      if (cleanLink.startsWith('t.me/')) {
+        const fullLink = `https://${cleanLink}`;
+        console.log('Telegram посилання без протоколу, додаємо https:', fullLink);
+        return fullLink;
+      }
+      
+      // Якщо це ID файлу Google Drive (тільки символи a-z, A-Z, 0-9, _, -)
+      const driveIdPattern = /^[a-zA-Z0-9_-]+$/;
+      if (driveIdPattern.test(cleanLink) && cleanLink.length > 20) {
+        const fullLink = `https://drive.google.com/file/d/${cleanLink}/view`;
+        console.log('Google Drive ID, створюємо повний URL:', fullLink);
+        return fullLink;
+      }
+      
+      // Якщо це частина URL Google Drive
+      if (cleanLink.includes('drive.google.com') || cleanLink.includes('docs.google.com')) {
+        // Витягуємо ID з різних форматів Google Drive URLs
+        const patterns = [
+          /\/d\/([a-zA-Z0-9_-]+)/,
+          /id=([a-zA-Z0-9_-]+)/,
+          /file\/d\/([a-zA-Z0-9_-]+)/
+        ];
+        
+        for (let pattern of patterns) {
+          const match = cleanLink.match(pattern);
+          if (match) {
+            const fullLink = `https://drive.google.com/file/d/${match[1]}/view`;
+            console.log('Витягнуто Google Drive ID, створено URL:', fullLink);
+            return fullLink;
+          }
+        }
+      }
+      
+      // Якщо не вдалося розпізнати тип, але схоже на URL без протоколу
+      if (cleanLink.includes('.') && !cleanLink.includes(' ')) {
+        const fullLink = `https://${cleanLink}`;
+        console.log('Додаємо https до посилання:', fullLink);
+        return fullLink;
+      }
+      
+      console.log('Не вдалося обробити посилання, повертаємо як є:', cleanLink);
+      return cleanLink;
+    }
 
     async function loadDataFromSheets() {
       try {
         console.log('Робимо запит до Google Sheets...');
-        
-        // Спробуємо CSV формат
         const response = await fetch(SHEET_URL);
         console.log('Відповідь отримано:', response.status);
         
@@ -602,52 +703,36 @@
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const csvText = await response.text();
-        console.log('CSV відповідь отримана:', csvText.substring(0, 200));
+        const text = await response.text();
+        console.log('Текст відповіді (перші 200 символів):', text.substring(0, 200));
         
-        // Парсимо CSV
-        const lines = csvText.split('\n').filter(line => line.trim());
-        const headers = lines[0].split(',');
+        // Видаляємо обгортку Google Sheets
+        const jsonString = text.substring(47).slice(0, -2);
+        const data = JSON.parse(jsonString);
+        console.log('Парсинг даних успішний');
         
-        const processedData = lines.slice(1)
-          .filter(line => line.trim())
-          .map(line => {
-            const values = line.split(',');
+        const processedData = data.table.rows.slice(1) // пропускаємо заголовки
+          .filter(row => row.c && row.c[0] && row.c[0].v) // фільтруємо порожні рядки
+          .map(row => {
+            const rawLink = row.c[2]?.v || '#';
+            const processedLink = processLink(rawLink);
+            
+            console.log('Оригінальне посилання:', rawLink);
+            console.log('Оброблене посилання:', processedLink);
+            
             return {
-              title: values[0]?.replace(/"/g, '') || '',
-              keywords: values[1]?.replace(/"/g, '') || '',
-              link: values[2]?.replace(/"/g, '') || '#',
-              tags: values[3]?.replace(/"/g, '') || ''
+              title: row.c[0]?.v || '',
+              keywords: row.c[1]?.v || '',
+              link: processedLink,
+              tags: row.c[3]?.v || ''
             };
-          })
-          .filter(item => item.title); // Фільтруємо порожні
+          });
           
         console.log('Оброблені дані:', processedData);
         return processedData;
       } catch (error) {
         console.error('Помилка завантаження з Google Sheets:', error);
-        
-        // Fallback - тестові дані
-        return [
-          {
-            title: 'Vampire Girl',
-            keywords: 'gothic, dark, anime',
-            link: '#',
-            tags: 'анімовані/аватарки'
-          },
-          {
-            title: 'Dark Rose',
-            keywords: 'rose, gothic, red',
-            link: '#',
-            tags: 'статичні/емоджі'
-          },
-          {
-            title: 'Blood Moon',
-            keywords: 'moon, blood, night',
-            link: '#',
-            tags: 'анімовані/статичні'
-          }
-        ];
+        return [];
       }
     }
 
@@ -655,7 +740,13 @@
       const tagsArray = item.tags.split('/').filter(tag => tag.trim());
       const tagsHTML = tagsArray.map(tag => `<span class="tag">${tag.trim()}</span>`).join('');
       
-      console.log('Створюємо картку:', item.title, 'з тегами:', tagsArray);
+      // Перевіряємо чи посилання дійсне
+      const isValidLink = item.link && item.link !== '#' && item.link.trim() !== '';
+      const linkAttributes = isValidLink 
+        ? `href="${item.link}" target="_blank" rel="noopener" onclick="handleLinkClick(event, '${item.link}')"`
+        : 'href="#" onclick="handleInvalidLink(event)"';
+      
+      console.log('Створюємо картку:', item.title, 'з посиланням:', item.link, 'дійсне:', isValidLink, 'з тегами:', tagsArray);
       
       return `
         <article class="card" data-tags="${item.tags.toLowerCase()}" data-keywords="${item.keywords.toLowerCase()}">
@@ -663,10 +754,42 @@
           <div class="tags">
             ${tagsHTML}
           </div>
-          <a class="btn" href="${item.link}" target="_blank" rel="noopener">Відкрити</a>
+          <a class="btn" ${linkAttributes}>Відкрити</a>
         </article>
       `;
     }
+
+    // Функція для обробки кліків на посилання
+    window.handleLinkClick = function(event, url) {
+      console.log('Клік по посиланню:', url);
+      
+      // Спробуємо відкрити в новому вікні
+      try {
+        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!newWindow) {
+          console.log('Браузер заблокував popup, спробуємо через location');
+          // Якщо popup заблокований, спробуємо через location
+          window.location.href = url;
+        } else {
+          console.log('Посилання успішно відкрито в новому вікні');
+        }
+      } catch (error) {
+        console.error('Помилка відкриття посилання:', error);
+        // Запасний варіант
+        window.location.href = url;
+      }
+      
+      event.preventDefault();
+      return false;
+    };
+
+    // Функція для недійсних посилань
+    window.handleInvalidLink = function(event) {
+      console.log('Клік по недійсному посиланню');
+      alert('Посилання недоступне або некоректне');
+      event.preventDefault();
+      return false;
+    };
 
     // --- Логіка пошуку та фільтрів ---
     (function(){
