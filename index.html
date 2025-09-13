@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -757,103 +756,77 @@
       `;
     }
 
-    // Спрощена функція для додавання обробників кліків
-    function addClickHandlers() {
-      // Знайдемо всі видимі кнопки (не заховані через display:none)
-      const buttons = Array.from(document.querySelectorAll('.card .btn')).filter(btn => {
+    // Функція діагностики кнопок
+    function diagnoseButtons() {
+      const allButtons = document.querySelectorAll('.card .btn');
+      console.log('Всього кнопок знайдено:', allButtons.length);
+      
+      allButtons.forEach((btn, i) => {
         const card = btn.closest('.card');
-        return card && window.getComputedStyle(card).display !== 'none';
+        const isVisible = card && window.getComputedStyle(card).display !== 'none';
+        const hasEvents = btn.onclick || btn.addEventListener;
+        console.log(`Кнопка ${i}: видима=${isVisible}, має обробники=${!!hasEvents}, посилання=${btn.href}`);
       });
-      
-      console.log('🔵 Знайдено видимих кнопок:', buttons.length);
-      
-      buttons.forEach((button, index) => {
-        const link = button.getAttribute('data-link') || button.getAttribute('href');
-        console.log(`🔵 Кнопка ${index + 1}: посилання = "${link}"`);
-        
-        // Видаляємо всі попередні обробники
-        const newButton = button.cloneNode(true);
-        button.parentNode.replaceChild(newButton, button);
-        
-        // Додаємо новий обробник до нової кнопки
-        newButton.addEventListener('click', function(event) {
-          console.log('🟢 === КЛІК ЗАФІКСОВАНО ===');
-          console.log('🟢 Індекс кнопки:', index);
-          console.log('🟢 Посилання:', link);
-          
-          event.preventDefault();
-          event.stopPropagation();
-          
-          if (!link || link === '#' || link.trim() === '') {
-            console.log('🔴 Недійсне посилання!');
-            alert('Посилання недоступне');
-            return false;
-          }
-          
-          try {
-            console.log('🟡 Відкриваємо посилання:', link);
-            
-            // Для Telegram посилань спробуємо спеціальний підхід
-            if (link.includes('t.me')) {
-              console.log('🟡 Це Telegram посилання, пробуємо відкрити');
-              
-              // Спробуємо відкрити через Telegram app якщо є
-              const telegramAppLink = link.replace('https://t.me/', 'tg://resolve?domain=').replace('/36', '&post=36');
-              console.log('🟡 Telegram app посилання:', telegramAppLink);
-              
-              // Спочатку пробуємо app
-              setTimeout(() => {
-                window.location.href = telegramAppLink;
-              }, 100);
-              
-              // Якщо app не відкрився, відкриваємо веб версію
-              setTimeout(() => {
-                window.open(link, '_blank');
-              }, 500);
-              
-            } else {
-              // Для інших посилань
-              window.open(link, '_blank', 'noopener,noreferrer');
-            }
-            
-          } catch (error) {
-            console.error('🔴 Помилка:', error);
-            alert('Помилка відкриття посилання: ' + error.message);
-          }
-          
-          return false;
-        }, { passive: false });
-        
-        console.log(`✅ Обробник додано для кнопки ${index + 1}`);
-      });
-      
-      // Додаткова перевірка через делегування подій
-      document.removeEventListener('click', globalClickHandler);
-      document.addEventListener('click', globalClickHandler);
     }
 
-    // Глобальний обробник подій як запасний варіант
-    function globalClickHandler(event) {
-      if (event.target.classList.contains('btn') && event.target.closest('.card')) {
-        console.log('🟠 Глобальний обробник спрацював!');
-        const link = event.target.getAttribute('data-link') || event.target.getAttribute('href');
-        console.log('🟠 Посилання з глобального обробника:', link);
+    // Найпростіший підхід - пряме делегування подій на контейнері
+    function setupEventDelegation() {
+      const cardsContainer = document.getElementById('cards');
+      
+      // Видаляємо старий обробник якщо є
+      cardsContainer.removeEventListener('click', cardClickHandler);
+      
+      // Додаємо новий обробник
+      cardsContainer.addEventListener('click', cardClickHandler);
+      console.log('Делегування подій налаштовано на контейнері карток');
+    }
+
+    function cardClickHandler(event) {
+      // Перевіряємо чи клік був по кнопці
+      if (event.target.classList.contains('btn') || event.target.closest('.btn')) {
+        const button = event.target.classList.contains('btn') ? event.target : event.target.closest('.btn');
+        const link = button.getAttribute('data-link') || button.getAttribute('href');
         
-        if (link && link !== '#') {
-          event.preventDefault();
-          event.stopPropagation();
-          
-          try {
-            if (link.includes('t.me')) {
-              window.location.href = link;
-            } else {
-              window.open(link, '_blank');
-            }
-          } catch (error) {
-            console.error('🔴 Помилка в глобальному обробнику:', error);
-          }
+        console.log('КЛІК ПО КНОПЦІ ЧЕРЕЗ ДЕЛЕГУВАННЯ!');
+        console.log('Посилання:', link);
+        
+        event.preventDefault();
+        event.stopPropagation();
+        
+        if (!link || link === '#' || link.trim() === '') {
+          console.log('Недійсне посилання!');
+          alert('Посилання недоступне');
+          return false;
         }
+        
+        try {
+          console.log('Відкриваємо посилання:', link);
+          
+          if (link.includes('t.me')) {
+            // Для Telegram - просто перенаправляємо
+            window.location.href = link;
+          } else {
+            // Для інших посилань
+            const newWindow = window.open(link, '_blank', 'noopener,noreferrer');
+            if (!newWindow) {
+              window.location.href = link;
+            }
+          }
+          
+        } catch (error) {
+          console.error('Помилка:', error);
+          alert('Помилка відкриття: ' + error.message);
+        }
+        
+        return false;
       }
+    }
+
+    // Спрощена функція для додавання обробників (залишаємо як запасний варіант)
+    function addClickHandlers() {
+      console.log('addClickHandlers викликано');
+      diagnoseButtons();
+      setupEventDelegation();
     }
 
     // Додаємо тестову кнопку для діагностики
