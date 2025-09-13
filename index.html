@@ -576,16 +576,23 @@
       pointer-events: auto;
     }
 
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
+    /* Переконуємося що кнопки можна натиснути */
+    .card .btn {
+      pointer-events: auto !important;
+      z-index: 10 !important;
+      position: relative !important;
+    }
+
+    /* Переконуємося що псевдоелементи не блокують кліки */
+    .card .btn::before,
+    .card .btn::after {
+      pointer-events: none !important;
+    }
+
+    /* Переконуємося що картки не блокують кліки */
+    .card::before,
+    .card::after {
+      pointer-events: none !important;
     }
   </style>
 </head>
@@ -782,20 +789,32 @@
     }
 
     function cardClickHandler(event) {
-      // Перевіряємо чи клік був по кнопці
-      if (event.target.classList.contains('btn') || event.target.closest('.btn')) {
-        const button = event.target.classList.contains('btn') ? event.target : event.target.closest('.btn');
+      console.log('Будь-який клік в контейнері карток:', event.target);
+      console.log('Клікнутий елемент:', event.target.tagName, event.target.className);
+      
+      // Перевіряємо чи клік був по кнопці або всередині кнопки
+      let button = null;
+      if (event.target.classList.contains('btn')) {
+        button = event.target;
+      } else if (event.target.closest('.btn')) {
+        button = event.target.closest('.btn');
+      }
+      
+      if (button) {
+        console.log('🔴 КЛІК ПО КНОПЦІ ВИЯВЛЕНО!');
         const link = button.getAttribute('data-link') || button.getAttribute('href');
         
-        console.log('КЛІК ПО КНОПЦІ ЧЕРЕЗ ДЕЛЕГУВАННЯ!');
         console.log('Посилання:', link);
+        console.log('Кнопка:', button);
         
         event.preventDefault();
         event.stopPropagation();
         
+        // Показуємо alert щоб точно побачити що клік спрацював
+        alert(`КЛІК СПРАЦЮВАВ!\nПосилання: ${link}`);
+        
         if (!link || link === '#' || link.trim() === '') {
           console.log('Недійсне посилання!');
-          alert('Посилання недоступне');
           return false;
         }
         
@@ -819,6 +838,8 @@
         }
         
         return false;
+      } else {
+        console.log('Клік НЕ по кнопці');
       }
     }
 
