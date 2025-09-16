@@ -789,8 +789,7 @@
     }
 
     function cardClickHandler(event) {
-      console.log('Будь-який клік в контейнері карток:', event.target);
-      console.log('Клікнутий елемент:', event.target.tagName, event.target.className);
+      console.log('Клік в контейнері карток:', event.target.tagName);
       
       // Перевіряємо чи клік був по кнопці або всередині кнопки
       let button = null;
@@ -801,26 +800,20 @@
       }
       
       if (button) {
-        console.log('🔴 КЛІК ПО КНОПЦІ ВИЯВЛЕНО!');
+        console.log('Клік по кнопці виявлено');
         const link = button.getAttribute('data-link') || button.getAttribute('href');
         
-        console.log('Посилання:', link);
-        console.log('Кнопка:', button);
+        console.log('Відкриваємо посилання:', link);
         
         event.preventDefault();
         event.stopPropagation();
         
-        // Показуємо alert щоб точно побачити що клік спрацював
-        alert(`КЛІК СПРАЦЮВАВ!\nПосилання: ${link}`);
-        
         if (!link || link === '#' || link.trim() === '') {
-          console.log('Недійсне посилання!');
+          console.log('Недійсне посилання');
           return false;
         }
         
         try {
-          console.log('Відкриваємо посилання:', link);
-          
           if (link.includes('t.me')) {
             // Для Telegram - просто перенаправляємо
             window.location.href = link;
@@ -833,13 +826,10 @@
           }
           
         } catch (error) {
-          console.error('Помилка:', error);
-          alert('Помилка відкриття: ' + error.message);
+          console.error('Помилка відкриття посилання:', error);
         }
         
         return false;
-      } else {
-        console.log('Клік НЕ по кнопці');
       }
     }
 
@@ -850,17 +840,10 @@
       setupEventDelegation();
     }
 
-    // Додаємо тестову кнопку для діагностики
-    function addTestButton() {
-      const testBtn = document.createElement('button');
-      testBtn.textContent = 'ТЕСТ КНОПКА';
-      testBtn.style.cssText = 'position:fixed;top:10px;right:10px;z-index:9999;background:red;color:white;padding:10px;border:none;border-radius:5px;';
-      testBtn.addEventListener('click', function() {
-        console.log('🟢 ТЕСТ КНОПКА ПРАЦЮЄ!');
-        alert('Тест кнопка працює!');
-      });
-      document.body.appendChild(testBtn);
-    }
+    // Видаляємо тестову кнопку
+    // function addTestButton() {
+    //   // Тестова кнопка видалена
+    // }
 
     // --- Логіка пошуку та фільтрів ---
     (function(){
@@ -1020,9 +1003,6 @@
           
           // Додаємо обробники кліків після створення карток
           addClickHandlers();
-          
-          // Додаємо тестову кнопку для діагностики
-          addTestButton();
           
           filterCards();
         } catch (error) {
